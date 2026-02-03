@@ -11,7 +11,7 @@ using Avalonia.Platform;
 
 namespace AsyncImageLoader;
 
-public class AdvancedImage : ContentControl {
+public class AdvancedImage : ContentControl, IDisposable {
     /// <summary>
     ///     Defines the <see cref="Loader" /> property.
     /// </summary>
@@ -82,6 +82,7 @@ public class AdvancedImage : ContentControl {
 
     private CancellationTokenSource? _updateCancellationToken;
     private readonly ParametrizedLogger? _logger;
+    private bool _disposed;
 
     static AdvancedImage() {
         AffectsRender<AdvancedImage>(CurrentImageProperty, StretchProperty, StretchDirectionProperty,
@@ -193,18 +194,23 @@ public class AdvancedImage : ContentControl {
     }
 
     private async void UpdateImage(string? source, IAsyncImageLoader? loader) {
+        if (_disposed)
+            return;
+
         var cancellationTokenSource = new CancellationTokenSource();
 
         var oldCancellationToken = Interlocked.Exchange(ref _updateCancellationToken, cancellationTokenSource);
 
         try {
             oldCancellationToken?.Cancel();
+            oldCancellationToken?.Dispose();
         }
         catch (ObjectDisposedException) {
         }
 
         if (source is null && FallbackImage != null) {
-            CurrentImage =  FallbackImage;
+            CurrentImage = FallbackImage;
+            return;
         }
 
         if (source is null && CurrentImage is not ImageWrapper) {
@@ -248,15 +254,11 @@ public class AdvancedImage : ContentControl {
             }
             catch (Exception e) {
                 _logger?.Log(this, "AdvancedImage image resolution failed: {0}", e);
-
                 return null;
-            }
-            finally {
-                cancellationTokenSource.Dispose();
             }
         }, CancellationToken.None);
 
-        if (cancellationTokenSource.IsCancellationRequested)
+        if (_disposed || cancellationTokenSource.IsCancellationRequested)
             return;
 
         CurrentImage = bitmap is null ? null : new ImageWrapper(bitmap);
@@ -313,6 +315,16 @@ public class AdvancedImage : ContentControl {
         return CurrentImage != null
             ? Stretch.CalculateSize(finalSize, CurrentImage.Size)
             : base.ArrangeOverride(finalSize);
+    }
+
+    public void Dispose() {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _updateCancellationToken?.Cancel();
+        _updateCancellationToken?.Dispose();
+        _updateCancellationToken = null;
     }
 
     public sealed class ImageWrapper : IImage {
