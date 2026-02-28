@@ -27,6 +27,14 @@ public static class ImageBrushLoader {
         try {
             if (!string.IsNullOrWhiteSpace(newValue)) {
                 bitmap = await AsyncImageLoader.ProvideImageAsync(newValue!);
+            } else {
+                var fallback = GetFallbackImage(imageBrush);
+                if (fallback != null) {
+                    bitmap = fallback!;
+                    imageBrush.Source = bitmap;
+                    SetIsLoading(imageBrush, false);
+                    return;
+                }
             }
         }
         catch (Exception e) {
@@ -41,6 +49,17 @@ public static class ImageBrushLoader {
 
     public static readonly AttachedProperty<string?> SourceProperty =
         AvaloniaProperty.RegisterAttached<ImageBrush, string?>("Source", typeof(ImageLoader));
+
+    public static readonly AttachedProperty<Bitmap?> FallbackImageProperty = 
+        AvaloniaProperty.RegisterAttached<ImageBrush, Bitmap?>("FallbackImage", typeof(Bitmap));
+
+    public static Bitmap? GetFallbackImage(ImageBrush element) {
+        return element.GetValue(FallbackImageProperty);
+    }
+
+    public static void SetFallbackImage(ImageBrush element, Bitmap? value) {
+        element.SetValue(FallbackImageProperty, value);
+    }
 
     public static string? GetSource(ImageBrush element) {
         return element.GetValue(SourceProperty);
