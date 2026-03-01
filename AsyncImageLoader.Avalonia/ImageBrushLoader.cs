@@ -25,17 +25,11 @@ public static class ImageBrushLoader {
 
         Bitmap? bitmap = null;
         try {
-            if (!string.IsNullOrWhiteSpace(newValue)) {
+            if (!string.IsNullOrWhiteSpace(newValue))
                 bitmap = await AsyncImageLoader.ProvideImageAsync(newValue!);
-            } else {
-                var fallback = GetFallbackImage(imageBrush);
-                if (fallback != null) {
-                    bitmap = fallback!;
-                    imageBrush.Source = bitmap;
-                    SetIsLoading(imageBrush, false);
-                    return;
-                }
-            }
+
+            if (bitmap == null && GetFallbackImage(imageBrush) is Bitmap fallback)
+                bitmap = fallback;
         }
         catch (Exception e) {
             Logger?.Log("ImageBrushLoader", "ImageBrushLoader image resolution failed: {0}", e);
