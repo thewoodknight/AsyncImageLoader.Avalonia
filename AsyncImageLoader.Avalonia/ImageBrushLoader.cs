@@ -50,13 +50,28 @@ public static class ImageBrushLoader {
     public static readonly AttachedProperty<string?> SourceProperty =
         AvaloniaProperty.RegisterAttached<ImageBrush, string?>("Source", typeof(ImageLoader));
 
-    public static readonly AttachedProperty<Bitmap?> FallbackImageProperty = 
+    /// <summary>
+    /// Attached property that provides a fallback <see cref="Bitmap"/> to use when <see cref="SourceProperty"/> is null or empty.
+    /// </summary>
+    public static readonly AttachedProperty<Bitmap?> FallbackImageProperty =
         AvaloniaProperty.RegisterAttached<ImageBrush, Bitmap?>("FallbackImage", typeof(Bitmap));
 
+    /// <summary>
+    /// Gets the fallback <see cref="Bitmap"/> attached to the specified <see cref="ImageBrush"/>.
+    /// Returns <c>null</c> if no fallback image has been set.
+    /// </summary>
+    /// <param name="element">The <see cref="ImageBrush"/> to read the fallback image from.</param>
+    /// <returns>The fallback <see cref="Bitmap"/>, or <c>null</c> if none is set.</returns>
     public static Bitmap? GetFallbackImage(ImageBrush element) {
         return element.GetValue(FallbackImageProperty);
     }
 
+    /// <summary>
+    /// Sets the fallback <see cref="Bitmap"/> on the specified <see cref="ImageBrush"/>.
+    /// The fallback image is used when the <see cref="SourceProperty"/> value is null or empty.
+    /// </summary>
+    /// <param name="element">The <see cref="ImageBrush"/> to set the fallback image on.</param>
+    /// <param name="value">The <see cref="Bitmap"/> to use as the fallback</param>
     public static void SetFallbackImage(ImageBrush element, Bitmap? value) {
         element.SetValue(FallbackImageProperty, value);
     }
